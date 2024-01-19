@@ -12,7 +12,7 @@ export class ChatService {
 
   broadcastMessage(message: string) {
     this.clients.forEach((client) => {
-      client.emit('message', message);
+      client.emit('listenMessage', { content: message });
     });
   }
 }
