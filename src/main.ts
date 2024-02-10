@@ -6,19 +6,17 @@ import { Logger } from '@nestjs/common';
 
 import databaseConfig from './config/database.config';
 
-// Use the URI from the configuration
 const mongoUri = databaseConfig.uri;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors(); // Tambahkan baris ini
+  app.enableCors();
 
   setupSwagger(app);
 
   const mongoUri = databaseConfig.uri;
   mongoose.connect(mongoUri);
 
-  // Access the connection instance
   const dbConnection = mongoose.connection;
 
   dbConnection.on('connected', () => {

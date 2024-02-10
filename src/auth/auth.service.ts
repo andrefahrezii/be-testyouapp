@@ -1,11 +1,10 @@
-// auth.service.ts
 import {
   Injectable,
   UnauthorizedException,
   ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { User } from './user.model';
+import { User } from '../user/user.model';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -20,7 +19,6 @@ export class AuthService {
     const user = await User.findOne({ username });
 
     if (user?.comparePassword(password)) {
-      // Rest of the code remains the same
       return user;
     }
 

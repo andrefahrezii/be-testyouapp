@@ -24,9 +24,19 @@
 
 ## Description
 
+##
+
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
 ## Installation
+
+```bash
+$ cd mongo
+```
+
+```bash
+$ docker compose up -d --build --remove-orphans
+```
 
 ```bash
 $ npm install
@@ -45,6 +55,12 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## API DOCS
+
+```
+[api](http://localhost:3000/api#/)
+```
+
 ## Test
 
 ```bash
@@ -57,6 +73,10 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
+
+## Images
+
+![alt text](image.png)
 
 ## Support
 

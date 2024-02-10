@@ -1,4 +1,3 @@
-// src/swagger.ts
 import { DocumentBuilder } from '@nestjs/swagger';
 import { SwaggerModule } from '@nestjs/swagger/dist/swagger-module';
 
