@@ -10,6 +10,7 @@ import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 import { MessageDto, JoinRoomDto } from './chat.dto';
 import { AuthService } from '../auth/auth.service';
+import { TypingDto } from './chat.dto';
 @WebSocketGateway({ namespace: 'chat', cors: { origin: '*' } })
 export class ChatGateway
   implements OnGatewayConnection<Socket>, OnGatewayDisconnect<Socket>
@@ -24,14 +25,11 @@ export class ChatGateway
   handleConnection(client: Socket): void {
     console.log(`Client connected: ${client.id}`);
 
-    // Mengambil daftar room yang diikuti oleh klien
     const rooms = Array.from(client.rooms);
 
     if (rooms.length > 0) {
-      // Mengambil room yang pertama (misalnya, jika klien hanya ada di satu room)
       const roomName = rooms[1];
 
-      // Mengirimkan informasi room ke klien
       client.emit('joinRoom', { roomName, token: 'exampleToken' });
     }
   }
@@ -40,35 +38,37 @@ export class ChatGateway
     console.log(`Client disconnected: ${client.id}`);
   }
 
-  // ...
   @SubscribeMessage('joinRoom')
   async handleJoinRoom(client: Socket, data: JoinRoomDto): Promise<void> {
     const roomName = data.roomName;
 
-    // Validasi dan autentikasi token JWT
-    const user = await this.validateJwtToken(data.token);
+    const username = await this.validateJwtToken(data.token);
 
-    if (!user) {
-      // Token tidak valid, kirim pesan umum dan tangani kesalahan lebih rinci di sisi klien
+    if (!username) {
       client.emit('authenticationError', { message: 'Authentication failed' });
       return;
     }
 
-    // Pengguna berhasil terotentikasi, bergabung ke room
     client.join(roomName);
     this.server.to(roomName).emit('joinedRoom', { roomId: roomName });
 
     const chatHistory = this.chatService.getChatHistory(roomName);
     client.emit('chatHistory', { roomId: roomName, history: chatHistory });
 
-    // Listen for incoming messages
-    client.on('message', (message) => {
-      console.log(`Received message in room ${roomName}:`, message);
-      // Do whatever you want with the received message
+    client.on('typing', (typingData: TypingDto) => {
+      const { isTyping } = typingData;
+      const message = `${username} is ${isTyping ? 'typing...' : 'stopped typing.'}`;
+      this.server.to(roomName).emit('typingStatus', { message });
+    });
+
+    client.on('message', (message: MessageDto) => {
+      const messageWithSender = { ...message, sender: username };
+
+      this.server.to(roomName).emit('message', messageWithSender);
     });
   }
 
-  private async validateJwtToken(token: string): Promise<any> {
+  private async validateJwtToken(token: string): Promise<string | null> {
     try {
       const decodedToken = await this.authService.validateToken(token);
       return decodedToken ? decodedToken.username : null;
@@ -82,17 +82,39 @@ export class ChatGateway
   handleSendMessageToRoom(client: Socket, message: MessageDto): void {
     const roomName = message.roomName;
 
-    // Validasi dan autentikasi token JWT
-    const user = this.validateJwtToken(message.token);
+    this.validateJwtToken(message.token)
+      .then((username) => {
+        if (!username) {
+          client.emit('authenticationError', {
+            message: 'Authentication failed',
+          });
+          return;
+        }
 
-    if (!user) {
-      // Token tidak valid, kirim pesan umum dan tangani kesalahan lebih rinci di sisi klien
-      client.emit('authenticationError', { message: 'Authentication failed' });
-      return;
-    }
+        const messageWithSender: MessageDto = {
+          sender: username,
+          roomName: message.roomName,
+          content: message.content,
+          token: message.token,
+        };
 
-    // Pengguna berhasil terotentikasi, kirim pesan ke room
-    this.chatService.addMessage(roomName, message, message.token);
-    this.server.to(roomName).emit('message', message); // Emit to the specific room
+        this.chatService.addMessage(roomName, messageWithSender, message.token);
+        this.server.to(roomName).emit('message', messageWithSender);
+      })
+      .catch((error) => {
+        console.error('Error validating JWT:', error.message);
+        client.emit('authenticationError', {
+          message: 'Authentication failed',
+        });
+      });
+  }
+  @SubscribeMessage('typing') // Listen for typing events
+  handleTypingEvent(client: Socket, typingData: TypingDto): void {
+    const roomName = typingData.roomName;
+    const isTyping = typingData.isTyping;
+
+    client
+      .to(roomName)
+      .emit('typing', { username: client.data.username, isTyping });
   }
 }

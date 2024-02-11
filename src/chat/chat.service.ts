@@ -1,4 +1,3 @@
-// src/chat/chat.service.ts
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { MessageDto } from './chat.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -22,7 +21,6 @@ export class ChatService {
     message: MessageDto,
     token: string,
   ): Promise<void> {
-    // Validasi token di sini
     const user = await this.validateJwtToken(token);
 
     if (!user) {
@@ -38,7 +36,6 @@ export class ChatService {
   private async validateJwtToken(token: string): Promise<any> {
     try {
       const decodedToken = await this.authService.validateToken(token);
-      // Disarankan untuk memeriksa payload token sesuai kebutuhan aplikasi
       if (decodedToken && decodedToken.username) {
         return decodedToken.username;
       } else {

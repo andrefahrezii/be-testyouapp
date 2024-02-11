@@ -1,8 +1,11 @@
-// src/chat/chat.dto.ts
-
 export class JoinRoomDto {
   roomName: string;
   token: string;
+}
+
+export class TypingDto {
+  roomName: string;
+  isTyping: boolean;
 }
 
 export class MessageDto {

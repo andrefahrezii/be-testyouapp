@@ -1,4 +1,3 @@
-// src/chat/chat.module.ts
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ChatGateway } from './chat.gateway';
@@ -9,8 +8,8 @@ import { AuthService } from '../auth/auth.service';
 @Module({
   imports: [
     JwtModule.register({
-      secret: '1234', // Gantilah dengan kunci rahasia JWT Anda
-      signOptions: { expiresIn: '1h' }, // Sesuaikan opsi sesuai kebutuhan Anda
+      secret: '1234',
+      signOptions: { expiresIn: '1h' },
     }),
   ],
   providers: [ChatGateway, ChatService, AuthService],

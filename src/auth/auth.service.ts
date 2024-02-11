@@ -17,16 +17,9 @@ export class AuthService {
 
   async validateToken(token: string): Promise<any | null> {
     try {
-      // Implementasikan logika validasi token JWT sesuai dengan kebutuhan Anda
-      // Gunakan JwtService atau modul autentikasi JWT yang Anda gunakan
-      // Pastikan mengembalikan objek pengguna jika token valid atau null jika tidak valid
-      // Contoh:
-      // const decodedToken = await this.jwtService.verify(token);
-      // return decodedToken ? decodedToken.user : null;
       const decodedToken = await this.jwtService.verify(token);
       return decodedToken;
     } catch (error) {
-      // Tangani kesalahan verifikasi token di sini, misalnya token kadaluwarsa atau tidak valid
       console.error('Error validating JWT:', error.message);
       return null;
     }
