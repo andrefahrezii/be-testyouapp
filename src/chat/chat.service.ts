@@ -1,18 +1,19 @@
 // src/chat/chat.service.ts
 import { Injectable } from '@nestjs/common';
-import { Socket } from 'socket.io';
+import { MessageDto } from './chat.dto';
 
 @Injectable()
 export class ChatService {
-  private clients: Socket[] = [];
+  private chatHistory: { [roomId: string]: MessageDto[] } = {};
 
-  addClient(client: Socket) {
-    this.clients.push(client);
+  getChatHistory(roomId: string): MessageDto[] {
+    return this.chatHistory[roomId] || [];
   }
 
-  broadcastMessage(message: string) {
-    this.clients.forEach((client) => {
-      client.emit('listenMessage', { content: message });
-    });
+  addMessage(roomId: string, message: MessageDto): void {
+    if (!this.chatHistory[roomId]) {
+      this.chatHistory[roomId] = [] as any;
+    }
+    this.chatHistory[roomId].push(message);
   }
 }
