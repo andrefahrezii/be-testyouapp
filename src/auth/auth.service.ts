@@ -15,22 +15,35 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
+  async validateToken(token: string): Promise<any | null> {
+    try {
+      // Implementasikan logika validasi token JWT sesuai dengan kebutuhan Anda
+      // Gunakan JwtService atau modul autentikasi JWT yang Anda gunakan
+      // Pastikan mengembalikan objek pengguna jika token valid atau null jika tidak valid
+      // Contoh:
+      // const decodedToken = await this.jwtService.verify(token);
+      // return decodedToken ? decodedToken.user : null;
+      const decodedToken = await this.jwtService.verify(token);
+      return decodedToken;
+    } catch (error) {
+      // Tangani kesalahan verifikasi token di sini, misalnya token kadaluwarsa atau tidak valid
+      console.error('Error validating JWT:', error.message);
+      return null;
+    }
+  }
+
   async validateUser(username: string, password: string): Promise<User | null> {
     const user = await User.findOne({ username });
 
-    if (user?.comparePassword(password)) {
+    if (user && user.comparePassword(password)) {
       return user;
     }
 
-    return null;
+    throw new UnauthorizedException('Invalid credentials');
   }
 
   async login(username: string, password: string): Promise<string> {
     const user = await this.validateUser(username, password);
-
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
 
     const payload = { username: user.username, sub: user.id };
     return this.generateToken(payload);
@@ -45,6 +58,7 @@ export class AuthService {
       if (existingUser) {
         throw new ConflictException('Username or email already exists');
       }
+
       const hashedPassword = await bcrypt.hash(userDto.password, 10);
 
       const newUser = new User({
@@ -52,6 +66,7 @@ export class AuthService {
         email: userDto.email,
         password: hashedPassword,
       });
+
       await newUser.save();
 
       const payload = { username: newUser.username, sub: newUser.id };
